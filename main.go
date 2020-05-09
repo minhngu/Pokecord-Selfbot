@@ -28,6 +28,7 @@ type Config struct {
 	Token     string   `json:"token"`
 	WhiteList []string `json:"white_list"`
 	LimitIV   float64  `json:"limit_iv"`
+	Prefix    string   `json:"prefix"`
 }
 
 var (
@@ -78,6 +79,7 @@ func main() {
 	config := getConfig()
 	// Get a map of all pokemon
 	pkmNameMap = getNameMap()
+	// getArt(pkmNameMap)
 	// Generate a map of pokemon hash
 	hashMap = getHashMap(pkmNameMap)
 
@@ -172,15 +174,14 @@ func messageCreate(s *discord.Session, m *discord.MessageCreate) {
 				// send catch command
 				if pkmName != "" {
 					sleep()
-					s.ChannelMessageSend(m.ChannelID, "p!catch "+pkmName)
+					s.ChannelMessageSend(m.ChannelID, config.Prefix+"catch "+pkmName)
 					recentlyCaught = true
 					recentlyCaughtName = pkmName
 					if isWhiteList(config.WhiteList, recentlyCaughtName) {
 						return
 					}
-					getLatest := "p!info latest"
 					sleep()
-					s.ChannelMessageSend(m.ChannelID, getLatest)
+					s.ChannelMessageSend(m.ChannelID, config.Prefix+"info latest")
 				}
 				break
 			}
@@ -196,7 +197,7 @@ func messageCreate(s *discord.Session, m *discord.MessageCreate) {
 				if math.Floor(iv) >= config.LimitIV {
 					return
 				}
-				marketSearchQuery := "p!market search --name " + recentlyCaughtName + " --iv > " + fmt.Sprintf("%f", math.Floor(iv)) + " --order price a"
+				marketSearchQuery := config.Prefix + "market search --name " + recentlyCaughtName + " --iv > " + fmt.Sprintf("%f", math.Floor(iv)) + " --order price a"
 				sleep()
 				s.ChannelMessageSend(m.ChannelID, marketSearchQuery)
 				break
@@ -206,11 +207,11 @@ func messageCreate(s *discord.Session, m *discord.MessageCreate) {
 				posPrice := strings.Index(market[1], "Price: ")
 				posCreds := strings.Index(market[1], " Credits")
 				recentlyCaughtPrice = market[1][posPrice+len("Price: ") : posCreds]
-				listQuery := "p!market list " + recentlyCaughtID + " " + recentlyCaughtPrice
+				listQuery := config.Prefix + "market list " + recentlyCaughtID + " " + recentlyCaughtPrice
 				sleep()
 				s.ChannelMessageSend(m.ChannelID, listQuery)
 				sleep()
-				s.ChannelMessageSend(m.ChannelID, "p!confirmlist")
+				s.ChannelMessageSend(m.ChannelID, config.Prefix+"confirmlist")
 				recentlyCaught = false
 			}
 		}
